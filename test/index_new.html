@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer" />
+  <title>大作业</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: auto;
+    }
+    .game_style{
+      /* border: 1px solid #888; */
+      position: absolute;
+      left: 4%;
+      bottom: 4%;
+    }
+  </style>
+  <!--引入three.js三维引擎-->
+  <script src="http://yg.bfuer.com/three.js-R125/build/three.js"></script>
+  <!-- <script src="http://yg.bfuer.com/three.js-R125/build/three.module.js"></script> -->
+  <script src="http://yg.bfuer.com/three.js-R125/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.6/pixi.min.js"></script>
+</head>
+
+<body>
+    <div id="game" class="game_style"></div>
+    <div id="ThreeJS" style="position: absolute;width: 50%;height: 50%; left:0px; top:0px"></div>
+  <script type="text/javascript">
+    //全局变量，g表示global
+    let g_scene, g_camera, g_renderer, g_controls;
+    var characterSize = 1;
+ 
+    var checkArea=0;//判断鼠标是否在操作杆上，0为不在，1为在
+    var joy=new THREE.Vector2()
+    // Track all objects and collisions.
+    var objects = [];
+
+    // Set mouse and raycaster.
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+
+    // Store movements.
+    var movements = [];
+    var movements2=[];
+    var playerSpeed = 0.1;
+
+    var cube;//参考物
+    var diff_x=0,diff_z=0;//摄像机位移
+
+    var camera2
+
+    // // 主镜头的显示范围
+    // let w = window.innerWidth
+    // let h = window.innerHeight
+    // // 小窗口的显示范围
+    // let mapHeight = 1000
+    // let mapWidth = 3000
+    //***************程序主逻辑********************
+    init();//初始化
+    loop();//循环开始
+
+
+    //循环运行update，render
+    function loop() {
+      requestAnimationFrame(loop);
+      update();
+      render();
+    }
+
+    function update() {
+        
+      // let T1 = new Date();//本次时间
+      // let t = (T1-T0) / 1000;//时间差
+      // T0 = T1;//把本次时间赋值给上次时间
+      
+    }
+
+    //渲染
+    function render() {
+      // 主镜头的显示范围
+      let w = window.innerWidth
+      let h = window.innerHeight
+      // 小窗口的显示范围
+      let mapHeight = 1000
+      let mapWidth = 2000
+      g_renderer.clear();
+
+      g_renderer.setViewport( 0, 0, w, h );
+      g_renderer.render(g_scene, g_camera);
+
+      g_renderer.setViewport( 600, 350, mapWidth, mapHeight );
+      g_renderer.render(g_scene, camera2);
+
+       // If any movement was added, run it!
+       if (movements.length > 0) {
+        // Set an indicator point to destination.
+        if (g_scene.getObjectByName('indicator_top') === undefined) {
+          drawIndicator();
+        } else {
+          if (indicatorTop.position.y > 0.1) {
+            indicatorTop.position.y -= 0.01;
+          } else {
+            indicatorTop.position.y = 0.5;
+          }
+        }
+ 
+        move(g_camera, movements[0]);
+        move(cube,movements2[0]);
+      }
+
+        updateCamera(0.0005*diff_x,0.0005*diff_z)
+    }
+    
+    //将需要初始化的放在该方法中统一初始化
+    function init() {
+      initScene();//初始化场景   
+      initCamera();//初始化相机
+      initRenender();//初始化渲染器
+      initLight();//初始化光线
+
+      setWindown();//窗体的设置
+      setEventsMouse();//定义鼠标事件
+      setKeyEvents();//定义键盘按键事件       
+      setOrbitControl();//设置Orbit控制    
+      setMesh();//定义场景中的物体
+      createFloor();
+      createTree(3, 3); 
+      createTree(8, -3);
+      createTree(-3, 8);
+      createTree(-8, -8);
+
+    }
+
+    //*************************************************
+    //初始化场景
+    function initScene() {
+      g_scene = new THREE.Scene();//创建场景
+
+      let axisHelper = new THREE.AxesHelper(250);
+ //     g_scene.add(axisHelper);
+    }
+
+    //初始化相机
+    function initCamera() {
+      let k = window.innerWidth / window.innerHeight; //窗口宽高比
+      let s = 200; 
+      
+    //  g_camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
+      g_camera = new THREE.PerspectiveCamera(60, k, 0.1, 200);
+      g_camera.position.set(0, 2, 10); //设置相机位置
+    //   g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
+      g_scene.add(g_camera);
+
+      camera2=new THREE.OrthographicCamera(window.innerWidth / -2,       // Left
+      window.innerWidth / 2,        // Right
+      window.innerHeight / 2,       // Top
+      window.innerHeight / -2,  // Bottom
+      -5000,                        // Near
+      10000 );
+      camera2.position.set(0,500,0)
+      // camera2.up = new THREE.Vector3(0,0,-1);
+      camera2.lookAt(new THREE.Vector3(0,-1,0)); //设置相机方向(指向的场景对象)
+      g_scene.add(camera2);
+    }
+
+    //初始化渲染器
+    function initRenender() {
+      //创建渲染器
+      g_renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+      g_renderer.setSize(window.innerWidth, window.innerHeight);
+     g_renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
+  //    g_renderer.setClearColor(0x000000, 1); //设置背景颜色
+      document.body.appendChild(g_renderer.domElement); //body元素中插入canvas对象, 渲染到浏览器
+      g_renderer.autoClear = false;
+    }
+
+    //初始化光源
+    function initLight() {
+      //点光源
+      let light_point = new THREE.PointLight(0xffffff);
+      light_point.position.set(400, 200, 300); //点光源位置
+      g_scene.add(light_point); //点光源添加到场景中
+      //环境光
+      let ambient = new THREE.AmbientLight(0x444444);
+      g_scene.add(ambient);
+      //聚光灯
+      // let light_spot = new THREE.SpotLight(0x00ffff);
+      // light_spot.position.set(-20, 80, -100); //点光源位置
+      // light_spot.angle = 0.5;
+      // g_scene.add(light_spot); //点光源添加到场景中
+
+      // let spotLightHelper = new THREE.SpotLightHelper( light_spot );
+      // g_scene.add( spotLightHelper );
+    }
+
+    //*************************************************
+    //响应resize消息，设置窗口尺寸并重设相机投影参数
+    function setWindown() {
+      //加入事件监听器,窗口自适应
+      window.addEventListener('resize', function () {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        g_renderer.setSize(width, height);
+        g_camera.aspect = width / height;
+        g_camera.updateProjectionMatrix();
+      });
+    }
+
+    //定义鼠标事件
+    function setEventsMouse() {
+      document.addEventListener('mousedown', onDocumentMouseDown);
+      document.addEventListener('mouseup', onDocumentMouseUp);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('touchstart', onDocumentTouchDown);
+      // document.addEventListener('touchend', onDocumentTouchUp);
+      document.addEventListener('touchmove', onDocumentTouchMove);
+
+    }
+
+    //定义键盘按键事件
+    function setKeyEvents() {
+      window.addEventListener('keydown', function (e) {
+        console.log(e);
+      });
+    }
+
+    //定义控制
+    function setOrbitControl() {
+      //轨道控制 镜头的移动
+      //g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
+    }
+
+
+    //定义场景中的网格物体
+    function setMesh() {
+        var geometry_cube = new THREE.BoxBufferGeometry(1,1,1);
+    var material_cube = new THREE.MeshLambertMaterial({
+      color: 0x00ffff
+    }); //材质对象Material
+    cube = new THREE.Mesh(geometry_cube, material_cube);
+    cube.position.set(0,2,10)
+    // cube.rotation.x = -1 * Math.PI / 2;
+    g_scene.add(cube); //网格模型添加到场景中
+    console.log(cube)
+    // objects.push(cube)
+    }
+
+
+
+
+
+
+
+
+function onDocumentTouchDown(event) {
+      if(checkArea==1)
+        return;
+      event.preventDefault();
+      toucheMovementX = event.touches[0].clientX;
+      toucheMovementY = event.touches[0].clientY;
+    }
+ 
+    var toucheMovementX, toucheMovementY;
+    function onDocumentTouchMove(event) {
+      if(checkArea==1)
+        return;
+      event.preventDefault();
+    
+      //0.5为移动端旋转角度的速度
+      event.movementX = 0.5 * (event.touches[0].clientX - toucheMovementX);
+      event.movementY = 0.5 * (event.touches[0].clientY - toucheMovementY);
+      toucheMovementX = event.touches[0].clientX;
+      toucheMovementY = event.touches[0].clientY;
+      onMouseMove(event, true);
+    }
+ 
+    //#region 相机旋转
+    var minPolarAngle = 0; // radians
+    var maxPolarAngle = Math.PI; // radians
+    var pointerSpeed = 1.0;
+    const _PI_2 = Math.PI / 2;
+    const _euler = new THREE.Euler(0, 0, 0, 'YXZ');//用法 THREE.Euler( a , b , c , ‘xyz’ );表示将一个几何体绕x轴旋转a度，绕y轴旋转b度，绕z轴旋转c度；
+                                                    //并且旋转的顺序是xyz ; 第三个参数旋转顺序可以是’XYZ’, ‘YZX’, ‘ZXY’, ‘XZY’, ‘YXZ’, ‘ZYX’
+    const _euler2 = new THREE.Euler(0, 0, 0, 'YXZ');                        
+    //相机旋转
+    function onMouseMove(event, ismobile = false) {
+      if(checkArea==1)
+        return;
+      event.preventDefault();
+      if (!isClicked && !ismobile)
+        return;
+        console.log(g_camera.rotation)
+      const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+      const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+ 
+      _euler.setFromQuaternion(g_camera.quaternion);//四元数转化为欧拉对象
+ 
+      _euler.y += movementX * 0.002 * pointerSpeed;
+      _euler.x += movementY * 0.002 * pointerSpeed;
+ 
+      _euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
+ 
+      g_camera.quaternion.setFromEuler(_euler);
+
+      _euler2.y += movementX * 0.002 * pointerSpeed;
+      cube.quaternion.setFromEuler(_euler2);
+    }
+    //#endregion
+ 
+    //#region 相机移动
+    var clickPointX, clickPointY;
+    var isClicked = false;
+    function onDocumentMouseDown(event, ismobile = false) {
+      if(checkArea==1)
+        return;
+      event.preventDefault();
+      //鼠标按下时，记录点击位置
+      if (event.which == 1 || ismobile) {
+        clickPointX = event.clientX;
+        clickPointY = event.clientY;
+        isClicked = true;
+      }
+    }
+ 
+    //相机移动
+    function onDocumentMouseUp(event, ismobile = false) {
+      if(checkArea==1)
+        return;
+      event.preventDefault();
+      if (event.which == 1 || ismobile)//which==1表示鼠标左键
+        isClicked = false;
+      // 鼠标抬起时对比点击位置，如果移动了，则执行旋转视角，如果点击点未移动则执行相机移动
+      if (((event.which == 1 || ismobile) && clickPointX == event.clientX && clickPointY == event.clientY)) {
+        stopMovement();
+        stopMovement2();
+        // Grab the coordinates.
+        mouse.x = (event.clientX / g_renderer.domElement.clientWidth) * 2 - 1;
+        mouse.y = - (event.clientY / g_renderer.domElement.clientHeight) * 2 + 1;
+ 
+        // Use the raycaster to detect intersections.
+        raycaster.setFromCamera(mouse, g_camera);
+        // 用一个新的原点和方向向量来更新射线（ray），用照相机的原点和点击的点构成一条直线。
+        
+        // Grab all objects that can be intersected.
+        var intersects = raycaster.intersectObjects(objects);
+        if (intersects.length > 0) {
+          movements.push(intersects[0].point);
+          movements2.push(intersects[0].point)
+        }
+        console.log(movements)
+      }
+    }
+ 
+    function move(location, destination, speed = playerSpeed) {
+      var moveDistance = speed;
+ 
+      // Translate over to the position.
+      var posX = location.position.x;
+      var posZ = location.position.z;
+      var newPosX = destination.x;
+      var newPosZ = destination.z;
+ 
+      // 设置一个乘数，以防我们需要负值。
+      var multiplierX = 1;
+      var multiplierZ = 1;
+ 
+      // 检测当前位置和目标之间的距离。
+      var diffX = Math.abs(posX - newPosX);
+      var diffZ = Math.abs(posZ - newPosZ);
+      var distance = Math.sqrt(diffX * diffX + diffZ * diffZ);
+ 
+      // 如有必要，使用负乘数。
+      if (posX > newPosX) {
+        multiplierX = -1;
+      }
+ 
+      if (posZ > newPosZ) {
+        multiplierZ = -1;
+      }
+ 
+      // Update the main position.
+      location.position.x = location.position.x + (moveDistance * (diffX / distance)) * multiplierX;
+      location.position.z = location.position.z + (moveDistance * (diffZ / distance)) * multiplierZ;
+ 
+      // If the position is close we can call the movement complete.
+      if ((location.position.x <= newPosX + moveDistance &&
+        location.position.x >= newPosX - moveDistance) &&
+        (location.position.z <= newPosZ + moveDistance &&
+          location.position.z >= newPosZ - moveDistance)) {
+        location.position.x = (location.position.x);
+        location.position.z = (location.position.z);
+ 
+        // Reset any movements.
+        stopMovement();
+ 
+        // Maybe move should return a boolean. True if completed, false if not. 
+      }
+ 
+    }
+
+
+    function move2(location, destination, speed = playerSpeed) {
+      var moveDistance = speed;
+ 
+      // Translate over to the position.
+      var posX = location.position.x;
+      var posZ = location.position.z;
+      var newPosX = destination.x;
+      var newPosZ = destination.z;
+ 
+      // 设置一个乘数，以防我们需要负值。
+      var multiplierX = 1;
+      var multiplierZ = 1;
+ 
+      // 检测当前位置和目标之间的距离。
+      var diffX = Math.abs(posX - newPosX);
+      var diffZ = Math.abs(posZ - newPosZ);
+      var distance = Math.sqrt(diffX * diffX + diffZ * diffZ);
+ 
+      // 如有必要，使用负乘数。
+      if (posX > newPosX) {
+        multiplierX = -1;
+      }
+ 
+      if (posZ > newPosZ) {
+        multiplierZ = -1;
+      }
+ 
+      // Update the main position.
+      location.position.x = location.position.x + (moveDistance * (diffX / distance)) * multiplierX;
+      location.position.z = location.position.z + (moveDistance * (diffZ / distance)) * multiplierZ;
+ 
+      // If the position is close we can call the movement complete.
+      if ((location.position.x <= newPosX + moveDistance &&
+        location.position.x >= newPosX - moveDistance) &&
+        (location.position.z <= newPosZ + moveDistance &&
+          location.position.z >= newPosZ - moveDistance)) {
+        location.position.x = (location.position.x);
+        location.position.z = (location.position.z);
+ 
+        // Reset any movements.
+        stopMovement2();
+ 
+        // Maybe move should return a boolean. True if completed, false if not. 
+      }
+ 
+    }
+ 
+    /**
+     * Stop character movement.
+     */
+    function stopMovement() {
+      movements = [];
+      g_scene.remove(indicatorTop);
+      g_scene.remove(indicatorBottom);
+    }
+
+    function stopMovement2() {
+      movements2 = [];
+    }
+
+    //#endregion
+ 
+
+
+    //#region 创建参照物
+    // 创建地面.
+    function createFloor() {
+      var geometry = new THREE.PlaneBufferGeometry(100, 100);
+      var material = new THREE.MeshToonMaterial({ color: 0x6e6e6e });
+      var plane = new THREE.Mesh(geometry, material);
+      plane.rotation.x = -1 * Math.PI / 2;
+      plane.position.y = 0;
+      g_scene.add(plane);
+      objects.push(plane);
+    }
+ 
+    // 创建树.
+    function createTree(posX, posZ) {
+      // Set some random values so our trees look different.
+      // var randomScale = (Math.random() * 3) + 0.8;
+      // var randomRotateY = Math.PI / (Math.floor((Math.random() * 32) + 1));
+      var randomScale = (0.5 * 3) + 0.8;
+      var randomRotateY = Math.PI / (Math.floor((0.5 * 32) + 1));
+      // Create the trunk.
+      var geometry = new THREE.CylinderGeometry(characterSize / 3.5, characterSize / 2.5, characterSize * 1.3, 8);
+      var material = new THREE.MeshToonMaterial({ color: 0x664422 });
+      var trunk = new THREE.Mesh(geometry, material);
+      trunk.position.set(posX, ((characterSize * 1.3 * randomScale) / 2), posZ);
+      trunk.scale.x = trunk.scale.y = trunk.scale.z = randomScale;
+      g_scene.add(trunk);
+ 
+      var geometry = new THREE.DodecahedronGeometry(characterSize);
+      var material = new THREE.MeshToonMaterial({ color: 0x44aa44 });
+      var treeTop = new THREE.Mesh(geometry, material);
+      treeTop.position.set(posX, ((characterSize * 1.3 * randomScale) / 2) + characterSize * randomScale, posZ);
+      treeTop.scale.x = treeTop.scale.y = treeTop.scale.z = randomScale;
+      treeTop.rotation.y = randomRotateY;
+      g_scene.add(treeTop);
+    }
+
+    // 移动目的地指示器。
+    var indicatorTop;
+    var indicatorBottom;
+    // 绘制3d目标点.
+    function drawIndicator() {
+      // Store variables.
+      var topSize = characterSize / 8;
+      var bottomRadius = characterSize / 4;
+ 
+      // Create the top indicator.
+      var geometry = new THREE.TetrahedronGeometry(topSize, 0);
+      var material = new THREE.MeshToonMaterial({ color: 0x00ccff, emissive: 0x00ccff });
+      indicatorTop = new THREE.Mesh(geometry, material);
+      indicatorTop.position.y = 0.05; // Flat surface so hardcode Y position for now.
+      indicatorTop.position.x = movements[0].x; // Get the X destination.
+      indicatorTop.position.z = movements[0].z; // Get the Z destination.
+      indicatorTop.rotation.x = -0.97;
+      indicatorTop.rotation.y = Math.PI / 4;
+      indicatorTop.name = 'indicator_top'
+      g_scene.add(indicatorTop);
+ 
+      // Create the bottom indicator.
+      var geometry = new THREE.TorusGeometry(bottomRadius, (bottomRadius * 0.25), 2, 12);
+      geometry.dynamic = true;
+      var material = new THREE.MeshToonMaterial({ color: 0x00ccff, emissive: 0x00ccff });
+      indicatorBottom = new THREE.Mesh(geometry, material);
+      indicatorBottom.position.y = 0.025;
+      indicatorBottom.position.x = movements[0].x;
+      indicatorBottom.position.z = movements[0].z;
+      indicatorBottom.rotation.x = -Math.PI / 2;
+      g_scene.add(indicatorBottom);
+    }
+
+
+    function updateCamera(diffX,diffZ){
+        // console.log(g_camera.position)
+        cube.translateX(diffX);
+        g_camera.position.x=cube.position.x;
+        cube.translateZ(diffZ);
+        g_camera.position.z=cube.position.z;
+    }
+  </script>
+
+<script>
+    var GameOptions = {
+        width: 230, //游戏屏幕的高度。
+        height: 250, //游戏屏幕的宽度。
+        ground_y: 400 - 65, //地面y坐标
+        fps: 10,
+        actorWidth: 57 * 2 * 0.8,
+        actorHeight: 61 * 2 * 0.8,
+
+        //--hero的行走向量速度。
+        hero_run_x_speed: 15,
+        hero_run_y_speed: 30 //hero跳跃时候向上的速度。
+
+    };
+</script>
+<script>
+    //--虚拟手柄控件。
+    function GameJoyPad(parent_container, _opts) {
+        var that = this;
+        this.settings = {
+            outer: "/RadialJoy_Area.png",//摇杆的背景。
+            inner: "/Button_active.png", //摇杆正体。
+            rockerX: 120, //摇杆的x坐标 
+            rockerY: 120, //摇杆的y坐标
+            //--注意，所有缩放的尺寸都是按照unitiy3d获得的这些摇杆素材来设置的，假如替换了texture，请重新设置缩放尺寸。
+            outer_scale: {//outer 需要缩放的比例，默认是x和y上面都是1
+                x: 0.3,
+                y: 0.3
+            },
+            inner_scale: {//摇杆主体需要缩放的比例，默认x、y都是1
+                x: 0.5,
+                y: 0.5,
+            },
+            //--摇杆摇动角度变换时候的回调函数。
+            onJoyStickMove: function (now_stick_angle) {
+
+            }
+
+        };
+
+        // $.extend(this.settings, _opts);
+        //--基本赋值。
+        this.parent_container = parent_container;
+        this.containerCom = {};
+        this.outer = {};
+        this.inner = {};
+        this.outer_radius = 0;//这是外置摇杆半径。
+        this.inner_radius = 0;//这是摇内置摇杆的半径。
+
+        //加载相关资源
+        that.loadResources(function () {
+            that.init_rocker();
+        });
+
+    }
+    GameJoyPad.prototype.loadResources = function (callback) {
+        var that = this;
+        PIXI.loader.add('outer', that.settings.outer);
+        PIXI.loader.add('inner', that.settings.inner);
+        PIXI.loader.once('complete', function () {
+            if (callback) {
+                callback();
+            }
+        });
+        PIXI.loader.load();
+    }
+    //--初始化摇杆。
+    GameJoyPad.prototype.init_rocker = function () {
+        var outerImg = PIXI.Texture.fromImage(this.settings.outer);
+        var innerImg = PIXI.Texture.fromImage(this.settings.inner);
+
+        this.containerCom = new PIXI.Container();
+        this.outer = new PIXI.Sprite(outerImg);
+        this.inner = new PIXI.Sprite(innerImg);
+        this.outer.scale = this.settings.outer_scale;
+        this.inner.scale = this.settings.inner_scale;
+        this.outer.anchor = { x: 0.5, y: 0.5 };
+        this.inner.anchor = { x: 0.5, y: 0.5 };
+        this.containerCom.anchor = { x: 0.5, y: 0.5 };
+        this.containerCom.addChild(this.outer);
+        this.containerCom.addChild(this.inner);
+
+        this.outer_radius = this.containerCom.width / 2; //外置摇杆半径
+        this.inner_radius = this.inner.width / 2; //内置摇杆半径
+
+        this.containerCom.position = {
+            x: this.settings.rockerX,
+            y: this.settings.rockerY
+        };
+        this.parent_container.addChild(this.containerCom);
+        this.init_rocker_events();
+    }
+    GameJoyPad.prototype.init_rocker_events = function () {
+        var that = this;
+        this.containerCom.interactive = true;
+        var dragging = false;
+        var eventData = {};
+        var touch_event_id = 0;
+        /******pixi bug1：当两个手指其中一个，譬如摇杆，另一个手指点击按钮，摇杆会接收到touch end事件。醉了。******/
+        function onDragStart(event) {
+            checkArea=1;
+            //--注意，pc端的identifier是undefined。
+            eventData = event.data;
+            var startPosition = eventData.getLocalPosition(this.parent);
+            touch_event_id = event.data.identifier;
+            dragging = true;
+        }
+        function onDragEnd(event) {
+            checkArea=0;
+            if (dragging == false) {
+                return;
+            }
+            if (touch_event_id != event.data.identifier) {
+                return;
+            }
+            dragging = false;
+            that.inner.position = {
+                x: 0,
+                y: 0
+            };
+            diff_x=0;
+            diff_z=0;
+        }
+        function onDragMove(event) {
+            checkArea=0;
+            if (touch_event_id != event.data.identifier) {
+                return;
+            }
+            if (dragging == false) {
+                return;
+            }
+            var newPosition = eventData.getLocalPosition(this.parent);
+            console.log(this.parent)
+            var side_x = newPosition.x - that.settings.rockerX;
+            var side_y = newPosition.y - that.settings.rockerY;
+
+            var center_point = {//--中心点。
+                x: 0,
+                y: 0
+            };
+
+            var current_angle = 0; //当前摇杆的角度
+
+
+            if (side_x == 0 && side_y == 0) {
+                return;
+            }
+            //判断执行计算的半径。
+            var _cal_radius = 0;
+
+            if (side_x * side_x + side_y * side_y >= that.outer_radius * that.outer_radius) {
+                _cal_radius = that.outer_radius;
+                //--假如大于的话，那么就按照圆弧计算坐标。
+
+            }
+            else {
+                _cal_radius = that.outer_radius - that.inner_radius;
+            }
+
+
+            if (side_x == 0) {
+                if (side_y > 0) {
+                    center_point = {
+                        x: 0,
+                        y: side_y > that.outer_radius ? that.outer_radius : side_y
+                    };
+                    current_angle = 270;//180度。
+                }
+                else {
+                    center_point = {
+                        x: 0,
+                        y: -(Math.abs(side_y) > that.outer_radius ? that.outer_radius : Math.abs(side_y))
+                    };
+                    current_angle = 90;//90度
+                }
+                // console.log(
+                //     center_point,'==>center_point'
+                // )
+                // console.log(
+                //     current_angle,'==>current_angle'
+                // )
+                that.inner.position = center_point;
+                that.settings.onJoyStickMove(current_angle);
+                return;
+            }
+            else if (side_y == 0) {
+                if (side_x > 0) {
+                    center_point = {
+                        x: (Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x))
+                        , y: 0
+                    };
+                    current_angle = 0;//0度
+                }
+                else {
+                    center_point = {
+                        x: -(Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x))
+                        , y: 0
+                    };
+                    current_angle = 180;//180度
+                }
+
+                that.inner.position = center_point;
+                that.settings.onJoyStickMove(current_angle);
+                return;
+            }
+            var _tan_val = Math.abs(side_y / side_x);
+            var _radian = Math.atan(_tan_val);//弧度
+            var _angle = _radian * 180 / Math.PI;//角度
+            current_angle = _angle;
+
+            //计算现在摇杆的中心点主坐标了。
+            var center_x = 0;
+            var center_y = 0;
+            if (side_x * side_x + side_y * side_y >= that.outer_radius * that.outer_radius) {
+                center_x = that.outer_radius * Math.cos(_radian);
+                center_y = that.outer_radius * Math.sin(_radian);
+
+            }
+            else {
+                center_x = Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x);
+                center_y = Math.abs(side_y) > that.outer_radius ? that.outer_radius : Math.abs(side_y);
+            }
+
+            if (side_y < 0) {
+                center_y = -Math.abs(center_y);
+            }
+            if (side_x < 0) {
+                center_x = -Math.abs(center_x);
+            }
+            if (side_x > 0 && side_y < 0) {
+                //--锐角。
+            }
+            else if (side_x < 0 && side_y < 0) {
+                //--钝角。
+                current_angle = 180 - current_angle;
+            }
+            else if (side_x < 0 && side_y > 0) {
+                current_angle = current_angle + 180;
+            }
+            else if (side_x > 0 && side_y > 0) {
+                current_angle = 360 - current_angle;
+            }
+            center_point = {
+                x: center_x,
+                y: center_y
+            };
+            // getDirection(center_point);
+            that.inner.position = center_point;
+            that.settings.onJoyStickMove(current_angle);
+
+            diff_x=center_x;
+            diff_z=center_y;
+        };
+
+        // events for drag start
+        this.containerCom.on('mousedown', onDragStart)
+            .on('touchstart', onDragStart)
+            // events for drag end
+            .on('mouseup', onDragEnd)
+            .on('mouseupoutside', onDragEnd)
+            .on('touchend', onDragEnd)
+            .on('touchendoutside', onDragEnd)
+            // events for drag move
+            .on('mousemove', onDragMove)
+            .on('touchmove', onDragMove);
+        // function getDirection(pos) {
+        //         //let hero = heroCom.children[0];
+        //         var rad = Math.atan2(pos.y, pos.x);// [-PI, PI]
+        //         if ((rad >= -Math.PI / 8 && rad < 0) || (rad >= 0 && rad < Math.PI / 8)) {
+        //             console.log("右");
+        //             // return cc.v2(1, 0);// 右
+        //         } else if (rad >= Math.PI / 8 && rad < 3 * Math.PI / 8) {
+        //             console.log("右下");
+        //             // return cc.v2(1, 1);// 右下
+        //         } else if (rad >= 3 * Math.PI / 8 && rad < 5 * Math.PI / 8) {
+        //             console.log("下");
+        //             // return cc.v2(0, 1);// <<下>>
+        //         } else if (rad >= 5 * Math.PI / 8 && rad < 7 * Math.PI / 8) {
+        //             console.log("左下");
+        //             // return cc.v2(-1, 1);// 左下
+        //         } else if ((rad >= 7 * Math.PI / 8 && rad < Math.PI) || (rad >= -Math.PI && rad < -7 * Math.PI / 8)) {
+        //             console.log("左");
+        //             // return cc.v2(-1, 0);// 左
+        //         } else if (rad >= -7 * Math.PI / 8 && rad < -5 * Math.PI / 8) {
+        //             console.log("左上");
+        //             // return cc.v2(-1, -1);// 左上
+        //         } else if (rad >= -5 * Math.PI / 8 && rad < -3 * Math.PI / 8) {
+        //             console.log("上");
+        //             // return cc.v2(0, -1);// <<上>>
+        //         } else {
+        //             console.log("右上");
+        //         }
+        // }
+    }
+
+</script>
+
+<script>
+    var gamePIXI = new PIXI.Container(0xffffff);
+    // var renderer = PIXI.autoDetectRenderer(GameOptions.width, GameOptions.height, { backgroundColor: 0x1099bb });
+    var renderer2D = PIXI.autoDetectRenderer(GameOptions.width, GameOptions.height, {transparent:true });
+    $("#game").append(renderer2D.view);
+    var _joy_pad = new GameJoyPad(gamePIXI);
+
+    function gameLoop() {
+        requestAnimationFrame(gameLoop);
+        renderer2D.render(gamePIXI);
+    }
+    requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+
+</html>
