@@ -266,6 +266,8 @@ function onDocumentTouchDown(event) {
     function onDocumentTouchMove(event) {
       if(checkArea==1)
         return;
+      if(isClicked)
+        return;
       event.preventDefault();
     
       //0.5为移动端旋转角度的速度
