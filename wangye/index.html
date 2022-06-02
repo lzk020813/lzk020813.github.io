@@ -49,7 +49,9 @@
     var cube;//参考物
     var diff_x=0,diff_z=0;//摄像机位移
 
-    var camera2
+    var camera2;
+
+    var touchmove_joy=false;//判断移动端移动摇杆
 
     // // 主镜头的显示范围
     // let w = window.innerWidth
@@ -654,7 +656,7 @@ function onDocumentTouchDown(event) {
             dragging = true;
         }
         function onDragEnd(event) {
-            checkArea=1;
+            checkArea=0;
             if (dragging == false) {
                 return;
             }
@@ -802,6 +804,7 @@ function onDocumentTouchDown(event) {
 
         function onDragMove_touch(event) {
             checkArea=0;
+            touchmove_joy=true;
             if (touch_event_id != event.data.identifier) {
                 return;
             }
