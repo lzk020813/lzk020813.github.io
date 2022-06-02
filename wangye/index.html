@@ -51,7 +51,6 @@
 
     var camera2;
 
-    var touchmove_joy=false;//判断移动端移动摇杆
 
     // // 主镜头的显示范围
     // let w = window.innerWidth
@@ -268,8 +267,6 @@ function onDocumentTouchDown(event) {
     function onDocumentTouchMove(event) {
       if(checkArea==1)
         return;
-      // if(touchmove_joy)
-      //   return;
       event.preventDefault();
     
       //0.5为移动端旋转角度的速度
@@ -672,140 +669,8 @@ function onDocumentTouchDown(event) {
             diff_x=0;
             diff_z=0;
         }
-        function onDragMove_mouse(event) {
+        function onDragMove(event) {
             // checkArea=0;
-            if (touch_event_id != event.data.identifier) {
-                return;
-            }
-            if (dragging == false) {
-                return;
-            }
-            var newPosition = eventData.getLocalPosition(this.parent);
-            console.log(this.parent)
-            var side_x = newPosition.x - that.settings.rockerX;
-            var side_y = newPosition.y - that.settings.rockerY;
-
-            var center_point = {//--中心点。
-                x: 0,
-                y: 0
-            };
-
-            var current_angle = 0; //当前摇杆的角度
-
-
-            if (side_x == 0 && side_y == 0) {
-                return;
-            }
-            //判断执行计算的半径。
-            var _cal_radius = 0;
-
-            if (side_x * side_x + side_y * side_y >= that.outer_radius * that.outer_radius) {
-                _cal_radius = that.outer_radius;
-                //--假如大于的话，那么就按照圆弧计算坐标。
-
-            }
-            else {
-                _cal_radius = that.outer_radius - that.inner_radius;
-            }
-
-
-            if (side_x == 0) {
-                if (side_y > 0) {
-                    center_point = {
-                        x: 0,
-                        y: side_y > that.outer_radius ? that.outer_radius : side_y
-                    };
-                    current_angle = 270;//180度。
-                }
-                else {
-                    center_point = {
-                        x: 0,
-                        y: -(Math.abs(side_y) > that.outer_radius ? that.outer_radius : Math.abs(side_y))
-                    };
-                    current_angle = 90;//90度
-                }
-                // console.log(
-                //     center_point,'==>center_point'
-                // )
-                // console.log(
-                //     current_angle,'==>current_angle'
-                // )
-                that.inner.position = center_point;
-                that.settings.onJoyStickMove(current_angle);
-                return;
-            }
-            else if (side_y == 0) {
-                if (side_x > 0) {
-                    center_point = {
-                        x: (Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x))
-                        , y: 0
-                    };
-                    current_angle = 0;//0度
-                }
-                else {
-                    center_point = {
-                        x: -(Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x))
-                        , y: 0
-                    };
-                    current_angle = 180;//180度
-                }
-
-                that.inner.position = center_point;
-                that.settings.onJoyStickMove(current_angle);
-                return;
-            }
-            var _tan_val = Math.abs(side_y / side_x);
-            var _radian = Math.atan(_tan_val);//弧度
-            var _angle = _radian * 180 / Math.PI;//角度
-            current_angle = _angle;
-
-            //计算现在摇杆的中心点主坐标了。
-            var center_x = 0;
-            var center_y = 0;
-            if (side_x * side_x + side_y * side_y >= that.outer_radius * that.outer_radius) {
-                center_x = that.outer_radius * Math.cos(_radian);
-                center_y = that.outer_radius * Math.sin(_radian);
-
-            }
-            else {
-                center_x = Math.abs(side_x) > that.outer_radius ? that.outer_radius : Math.abs(side_x);
-                center_y = Math.abs(side_y) > that.outer_radius ? that.outer_radius : Math.abs(side_y);
-            }
-
-            if (side_y < 0) {
-                center_y = -Math.abs(center_y);
-            }
-            if (side_x < 0) {
-                center_x = -Math.abs(center_x);
-            }
-            if (side_x > 0 && side_y < 0) {
-                //--锐角。
-            }
-            else if (side_x < 0 && side_y < 0) {
-                //--钝角。
-                current_angle = 180 - current_angle;
-            }
-            else if (side_x < 0 && side_y > 0) {
-                current_angle = current_angle + 180;
-            }
-            else if (side_x > 0 && side_y > 0) {
-                current_angle = 360 - current_angle;
-            }
-            center_point = {
-                x: center_x,
-                y: center_y
-            };
-            // getDirection(center_point);
-            that.inner.position = center_point;
-            that.settings.onJoyStickMove(current_angle);
-
-            diff_x=center_x;
-            diff_z=center_y;
-        };
-
-        function onDragMove_touch(event) {
-            // checkArea=0;
-            touchmove_joy=true;
             if (touch_event_id != event.data.identifier) {
                 return;
             }
@@ -945,8 +810,8 @@ function onDocumentTouchDown(event) {
             .on('touchend', onDragEnd)
             .on('touchendoutside', onDragEnd)
             // events for drag move
-            .on('mousemove', onDragMove_mouse)
-            .on('touchmove', onDragMove_touch);
+            .on('mousemove', onDragMove)
+            .on('touchmove', onDragMove);
         // function getDirection(pos) {
         //         //let hero = heroCom.children[0];
         //         var rad = Math.atan2(pos.y, pos.x);// [-PI, PI]
