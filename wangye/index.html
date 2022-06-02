@@ -268,7 +268,7 @@ function onDocumentTouchDown(event) {
     function onDocumentTouchMove(event) {
       if(checkArea==1)
         return;
-      if(isClicked)
+      if(touchmove_joy)
         return;
       event.preventDefault();
     
@@ -657,6 +657,7 @@ function onDocumentTouchDown(event) {
         }
         function onDragEnd(event) {
             checkArea=0;
+            touchmove_joy=false;
             if (dragging == false) {
                 return;
             }
