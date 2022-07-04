@@ -16,17 +16,273 @@
       left: 4%;
       bottom: 4%;
     }
+    .pic_show{
+      position: absolute;
+      left: 22%;
+      bottom: 3%;
+      width: 60%;
+      height: 13%;
+    }
+
+    .upline{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 5%;
+      background-color: #fff;
+      opacity: 0.5;
+    }
+
+    .downline{
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 5%;
+      background-color: #fff;
+      opacity: 0.5;
+    }
+
+    .load-wrapper {
+      position: absolute;
+      /* width: 100%; */
+      /* height: 10%; */
+      overflow: hidden;
+      background: gray;
+       /* -webkit-user-select: none; */
+       /* user-select: none; */
+      height: 90%;
+      width: 100%;
+      top: 5%;
+    }
+        
+    .load-scroller {
+        /* display: -webkit-box;
+        display: -webkit-flex;
+        display: flex; */
+        position: absolute;
+      /* width: 100%; */
+      /* height: 10%; */
+        /* overflow: hidden; */
+        background: lightgray;
+        width: 100%;
+        height: 100%;
+    }
+        
+    .load-item {
+        /* -webkit-flex-shrink: 0;
+        flex-shrink: 0; */
+        float: left;
+        width: 10rem;
+        height: 100%;
+        padding: 0.2rem 0.1rem;
+        margin-right: 1rem;
+        background: green;
+        border-radius: 0.1rem;
+        overflow: hidden;
+        /* opacity: 1; */
+    }
+        
+    .load-item:last-child {
+        margin-right: 0;
+     }
+
+     .list{
+      position: absolute;
+      bottom: 3%;
+      right: 6.3%;
+      width: 2%;
+      height: 4%;
+      background-color:lightgrey;
+      border-width: 10px;
+      border-radius: 5px;
+     }
+
+     .list_pic{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      /* background-color: #fff; */
+     }
+
+     .list_text{
+      position: absolute;
+      top:95.5%;
+      right: 6%;
+      width: 2.5%;
+      height: 2.5%;
+      /* background-color: bisque; */
+      font-weight: bold;
+      text-align: center;
+     }
+
   </style>
   <!--引入three.js三维引擎-->
-  <script src="js/three.js"></script>
+  <script src="http://yg.bfuer.com/three.js-R125/build/three.js"></script>
+  <!-- <script src="http://yg.bfuer.com/three.js-R125/build/three.module.js"></script> -->
+  <script src="http://yg.bfuer.com/three.js-R125/examples/js/controls/OrbitControls.js"></script>
   <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
   <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.6/pixi.min.js"></script>
+  <script src="mscroll.js"></script>
+  <script src="https://cdn.staticfile.org/vue/3.2.36/vue.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script src="Tween.js"></script>
 </head>
 
 <body>
     <div id="game" class="game_style"></div>
-    <div id="ThreeJS" style="position: absolute;width: 50%;height: 50%; left:0px; top:0px"></div>
+    <!-- <div id="ThreeJS" style="position: absolute;width: 50%;height: 50%; left:0px; top:0px"></div> -->
+    <div v-if="isList===1" class="pic_show">
+      <div class="upline"></div>
+      <div class="load-wrapper">
+        <div class="load-scroller">
+          <!-- 利用Vue循环v-for列出图片 -->
+          <div v-for="(value,index) in ImgArray" class="load-item" v-bind:style="'margin-right:0.8rem;background:url(' + value+')' +';background-size: 100% 100%'" v-on:click="ImgClick(index)"></div>
+          <!-- <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
+          </div>
+          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
+          </div> -->
+        </div>
+      </div>
+      <div class="downline"></div>
+    </div>
+
+    <div class="list" id="list_div">
+      <div class="list_pic">
+        <img src="images/list.png" alt="" style="width:100%;height:100%;cursor:pointer;" id="list_click">
+      </div>
+    </div>
+    <div class="list_text">
+      <p v-if="isList===1">隐藏</p>
+      <p v-else>列表</p>
+    </div>
+
+
+    <script>
+      //相机平滑过渡动画函数
+      function animateCamera(current1, target1, current2, target2) {
+            let positionVar = {
+              x1: current1.x,
+              y1: current1.y,
+              z1: current1.z,
+              x2: target1.x,
+              y2: target1.y,
+              z2: target1.z
+            };
+            //关闭控制器
+            g_controls.enabled = false;
+            var tween = new TWEEN.Tween(positionVar);
+            tween.to({
+              x1: current2.x,
+              y1: current2.y,
+              z1: current2.z,
+              x2: target2.x,
+              y2: target2.y,
+              z2: target2.z
+            }, 1000);
+            tween.onUpdate(function () {
+              g_camera.position.x = positionVar.x1;
+              g_camera.position.y = positionVar.y1;
+              g_camera.position.z = positionVar.z1;
+              cube.position.set(positionVar.x1, positionVar.y1, positionVar.z1)
+              g_controls.target.x = positionVar.x2;
+              g_controls.target.y = positionVar.y2;
+              g_controls.target.z = positionVar.z2;
+              g_controls.update()
+            });
+            tween.start();
+            tween.onComplete(function () {
+              ///开启控制器
+              // g_controls.enabled = true;
+            });
+            tween.easing(TWEEN.Easing.Cubic.InOut);		
+          }
+
+
+
+
+      var ImgListCheckNum = new Array(30).fill(0);
+      var PaintPos=new THREE.Vector3()
+      var Pos=[{x:12,y:2,z:10},{x:20,y:2,z:-20}]//画的位置
+      var lookPos=[{x:-400,y:0,z:0}]//视角的方向向量
+      setInterval(function(){
+        for(var i=0;i<ImgListCheckNum.length;i++)
+        {
+          ImgListCheckNum[i]=0;
+        }
+      },3000)
+
+      Vue.config.productionTip=false;
+      var vm_list = new Vue({
+          el:".pic_show",//挂载目标
+          data:{
+              isList:1,
+              ImgArray:['1.bmp','1.bmp','RadialJoy_Area.png','Button_active.png','RadialJoy_Area.png','Button_active.png',
+              'RadialJoy_Area.png','Button_active.png','RadialJoy_Area.png','Button_active.png']
+          },
+
+          methods: {
+            ImgClick: function (index) {
+              ImgListCheckNum[index]++;
+              if(ImgListCheckNum[index]==2)
+              {
+                //相机动画
+                  let p1 = new THREE.Vector3();
+                  let t1 = new THREE.Vector3();
+                  p1 = g_camera.position;
+                  t1 = g_controls.target;
+                  animateCamera(p1, t1, Pos[index], lookPos[index]);
+              }
+            }
+          }
+
+      })
+
+
+
+
+
+      var vm_listText = new Vue({
+          el:".list_text",//挂载目标
+          data:{
+              isList:1
+          }
+      })
+
+      var showList = () => {
+        var temp=1-vm_list._data.isList;
+        Vue.set(vm_list._data,'isList',temp)
+        Vue.set(vm_listText._data,'isList',temp)
+        if(temp==1)
+        {
+          setTimeout(function(){
+            new MScroll('.load-wrapper', {
+              // showScrollbar: true,
+              lazyload: true,
+              mouse: true
+          })
+          },100)
+        }
+			}
+	  document.getElementById('list_click').addEventListener('click', showList);
+
+    </script>
+
+
+
   <script type="text/javascript">
     //全局变量，g表示global
     let g_scene, g_camera, g_renderer, g_controls;
@@ -49,8 +305,7 @@
     var cube;//参考物
     var diff_x=0,diff_z=0;//摄像机位移
 
-    var camera2;
-
+    var camera2
 
     // // 主镜头的显示范围
     // let w = window.innerWidth
@@ -71,30 +326,30 @@
     }
 
     function update() {
-        
+      TWEEN.update();
       // let T1 = new Date();//本次时间
       // let t = (T1-T0) / 1000;//时间差
       // T0 = T1;//把本次时间赋值给上次时间
-      
     }
 
     //渲染
     function render() {
-      // 主镜头的显示范围
-      let w = window.innerWidth
-      let h = window.innerHeight
-      // 小窗口的显示范围
-      let mapHeight = 1000
-      let mapWidth = 2000
+      // // 主镜头的显示范围
+      // let w = window.innerWidth
+      // let h = window.innerHeight
+      // // 小窗口的显示范围
+      // let mapHeight = 1000
+      // let mapWidth = 2000
       g_renderer.clear();
 
-      g_renderer.setViewport( 0, 0, w, h );
+      // g_renderer.setViewport( 0, 0, w, h );
       g_renderer.render(g_scene, g_camera);
 
-      g_renderer.setViewport( 600, 350, mapWidth, mapHeight );
-      g_renderer.render(g_scene, camera2);
+      // g_renderer.setViewport( 600, 350, mapWidth, mapHeight );
+      // g_renderer.render(g_scene, camera2);
 
        // If any movement was added, run it!
+      //  console.log(movements.length)
        if (movements.length > 0) {
         // Set an indicator point to destination.
         if (g_scene.getObjectByName('indicator_top') === undefined) {
@@ -106,12 +361,12 @@
             indicatorTop.position.y = 0.5;
           }
         }
- 
         move(g_camera, movements[0]);
-        move(cube,movements2[0]);
+        move2(cube,movements2[0]);
       }
 
         updateCamera(0.0005*diff_x,0.0005*diff_z)
+        // console.log(g_controls.target.x,g_controls.target.y,g_controls.target.z)
     }
     
     //将需要初始化的放在该方法中统一初始化
@@ -154,16 +409,16 @@
     //   g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
       g_scene.add(g_camera);
 
-      camera2=new THREE.OrthographicCamera(window.innerWidth / -2,       // Left
-      window.innerWidth / 2,        // Right
-      window.innerHeight / 2,       // Top
-      window.innerHeight / -2,  // Bottom
-      -5000,                        // Near
-      10000 );
-      camera2.position.set(0,500,0)
-      // camera2.up = new THREE.Vector3(0,0,-1);
-      camera2.lookAt(new THREE.Vector3(0,-1,0)); //设置相机方向(指向的场景对象)
-      g_scene.add(camera2);
+      // camera2=new THREE.OrthographicCamera(window.innerWidth / -2,       // Left
+      // window.innerWidth / 2,        // Right
+      // window.innerHeight / 2,       // Top
+      // window.innerHeight / -2,  // Bottom
+      // -5000,                        // Near
+      // 10000 );
+      // camera2.position.set(0,500,0)
+      // // camera2.up = new THREE.Vector3(0,0,-1);
+      // camera2.lookAt(new THREE.Vector3(0,-1,0)); //设置相机方向(指向的场景对象)
+      // g_scene.add(camera2);
     }
 
     //初始化渲染器
@@ -174,7 +429,7 @@
      g_renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
   //    g_renderer.setClearColor(0x000000, 1); //设置背景颜色
       document.body.appendChild(g_renderer.domElement); //body元素中插入canvas对象, 渲染到浏览器
-      g_renderer.autoClear = false;
+      // g_renderer.autoClear = false;
     }
 
     //初始化光源
@@ -230,22 +485,33 @@
     //定义控制
     function setOrbitControl() {
       //轨道控制 镜头的移动
-      //g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
+      g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
+      g_controls.enabled=false
+      g_controls.enabledRotate=false
+      g_controls.enableZoom=false
     }
 
 
     //定义场景中的网格物体
     function setMesh() {
-        var geometry_cube = new THREE.BoxBufferGeometry(1,1,1);
-    var material_cube = new THREE.MeshLambertMaterial({
-      color: 0x00ffff
-    }); //材质对象Material
-    cube = new THREE.Mesh(geometry_cube, material_cube);
-    cube.position.set(0,2,10)
-    // cube.rotation.x = -1 * Math.PI / 2;
-    g_scene.add(cube); //网格模型添加到场景中
-    console.log(cube)
-    // objects.push(cube)
+      var geometry_cube = new THREE.BoxBufferGeometry(1,1,1);
+      var material_cube = new THREE.MeshLambertMaterial({
+        color: 0x00ffff
+      }); //材质对象Material
+      cube = new THREE.Mesh(geometry_cube, material_cube);
+      cube.position.set(0,2,10)
+      // cube.rotation.x = -1 * Math.PI / 2;
+      g_scene.add(cube); //网格模型添加到场景中
+      console.log(cube)
+      // objects.push(cube)
+      var geometry_cube2 = new THREE.BoxBufferGeometry(1,1,1);
+      var material_cube2 = new THREE.MeshLambertMaterial({
+        color: 0x00ffff
+      }); //材质对象Material
+      cube2 = new THREE.Mesh(geometry_cube2, material_cube2);
+      cube2.position.set(10,2,10)
+      // cube.rotation.x = -1 * Math.PI / 2;
+      g_scene.add(cube2); //网格模型添加到场景中
     }
 
 
@@ -267,8 +533,9 @@ function onDocumentTouchDown(event) {
     function onDocumentTouchMove(event) {
       if(checkArea==1)
         return;
+      if(isClicked)
+        return;
       event.preventDefault();
-    
       //0.5为移动端旋转角度的速度
       event.movementX = 0.5 * (event.touches[0].clientX - toucheMovementX);
       event.movementY = 0.5 * (event.touches[0].clientY - toucheMovementY);
@@ -292,7 +559,7 @@ function onDocumentTouchDown(event) {
       event.preventDefault();
       if (!isClicked && !ismobile)
         return;
-        console.log(g_camera.rotation)
+      //  console.log(g_camera.rotation)
       const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
       const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
  
@@ -300,7 +567,10 @@ function onDocumentTouchDown(event) {
  
       _euler.y += movementX * 0.002 * pointerSpeed;
       _euler.x += movementY * 0.002 * pointerSpeed;
- 
+      // console.log(_euler._x,_euler._y,_euler._z)
+      g_controls.target.x=_euler._x,
+      g_controls.target.y=_euler._y,
+      g_controls.target.z=_euler._z,
       _euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
  
       g_camera.quaternion.setFromEuler(_euler);
@@ -316,11 +586,23 @@ function onDocumentTouchDown(event) {
     function onDocumentMouseDown(event, ismobile = false) {
       if(checkArea==1)
         return;
+      //判断鼠标是否在列表div内
+      var list_div = document.getElementById("list_div");
+      var divx1 = list_div.offsetLeft;
+      var divy1 = list_div.offsetTop;
+      var divx2 = list_div.offsetLeft + list_div.offsetWidth;
+      var divy2 = list_div.offsetTop + list_div.offsetHeight;
+      if(event.clientX>divx1&&event.clientX<divx2 ||event.clientY>divy1&&event.clientY<divy2)//若在列表div内
+      {
+        return;
+      }
+
       event.preventDefault();
       //鼠标按下时，记录点击位置
       if (event.which == 1 || ismobile) {
         clickPointX = event.clientX;
         clickPointY = event.clientY;
+        // console.log(clickPointX,clickPointY)
         isClicked = true;
       }
     }
@@ -329,6 +611,7 @@ function onDocumentTouchDown(event) {
     function onDocumentMouseUp(event, ismobile = false) {
       if(checkArea==1)
         return;
+  
       event.preventDefault();
       if (event.which == 1 || ismobile)//which==1表示鼠标左键
         isClicked = false;
@@ -345,12 +628,12 @@ function onDocumentTouchDown(event) {
         // 用一个新的原点和方向向量来更新射线（ray），用照相机的原点和点击的点构成一条直线。
         
         // Grab all objects that can be intersected.
-        var intersects = raycaster.intersectObjects(objects);
+        var intersects = raycaster.intersectObjects(objects,true);
+
         if (intersects.length > 0) {
           movements.push(intersects[0].point);
           movements2.push(intersects[0].point)
         }
-        console.log(movements)
       }
     }
  
@@ -386,16 +669,14 @@ function onDocumentTouchDown(event) {
       location.position.z = location.position.z + (moveDistance * (diffZ / distance)) * multiplierZ;
  
       // If the position is close we can call the movement complete.
-      if ((location.position.x <= newPosX + moveDistance &&
-        location.position.x >= newPosX - moveDistance) &&
-        (location.position.z <= newPosZ + moveDistance &&
-          location.position.z >= newPosZ - moveDistance)) {
+      if ((location.position.x <= newPosX + moveDistance) &&(location.position.x >= newPosX - moveDistance) 
+      &&(location.position.z <= newPosZ + moveDistance) &&(location.position.z >= newPosZ - moveDistance))
+      {
         location.position.x = (location.position.x);
         location.position.z = (location.position.z);
  
         // Reset any movements.
         stopMovement();
- 
         // Maybe move should return a boolean. True if completed, false if not. 
       }
  
@@ -483,6 +764,7 @@ function onDocumentTouchDown(event) {
       // Set some random values so our trees look different.
       // var randomScale = (Math.random() * 3) + 0.8;
       // var randomRotateY = Math.PI / (Math.floor((Math.random() * 32) + 1));
+
       var randomScale = (0.5 * 3) + 0.8;
       var randomRotateY = Math.PI / (Math.floor((0.5 * 32) + 1));
       // Create the trunk.
@@ -492,7 +774,7 @@ function onDocumentTouchDown(event) {
       trunk.position.set(posX, ((characterSize * 1.3 * randomScale) / 2), posZ);
       trunk.scale.x = trunk.scale.y = trunk.scale.z = randomScale;
       g_scene.add(trunk);
- 
+      objects.push(trunk)
       var geometry = new THREE.DodecahedronGeometry(characterSize);
       var material = new THREE.MeshToonMaterial({ color: 0x44aa44 });
       var treeTop = new THREE.Mesh(geometry, material);
@@ -500,6 +782,7 @@ function onDocumentTouchDown(event) {
       treeTop.scale.x = treeTop.scale.y = treeTop.scale.z = randomScale;
       treeTop.rotation.y = randomRotateY;
       g_scene.add(treeTop);
+      objects.push(treeTop)
     }
 
     // 移动目的地指示器。
@@ -565,8 +848,8 @@ function onDocumentTouchDown(event) {
     function GameJoyPad(parent_container, _opts) {
         var that = this;
         this.settings = {
-            outer: 'pic/RadialJoy_Area.png',//摇杆的背景。
-            inner: "pic/Button_active.png", //摇杆正体。
+            outer: "/RadialJoy_Area.png",//摇杆的背景。
+            inner: "/Button_active.png", //摇杆正体。
             rockerX: 120, //摇杆的x坐标 
             rockerY: 120, //摇杆的y坐标
             //--注意，所有缩放的尺寸都是按照unitiy3d获得的这些摇杆素材来设置的，假如替换了texture，请重新设置缩放尺寸。
@@ -654,7 +937,6 @@ function onDocumentTouchDown(event) {
         }
         function onDragEnd(event) {
             checkArea=0;
-            touchmove_joy=false;
             if (dragging == false) {
                 return;
             }
@@ -670,7 +952,6 @@ function onDocumentTouchDown(event) {
             diff_z=0;
         }
         function onDragMove(event) {
-            // checkArea=0;
             if (touch_event_id != event.data.identifier) {
                 return;
             }
@@ -800,6 +1081,7 @@ function onDocumentTouchDown(event) {
             diff_z=center_y;
         };
 
+        
 
         // events for drag start
         this.containerCom.on('mousedown', onDragStart)
@@ -858,6 +1140,16 @@ function onDocumentTouchDown(event) {
     requestAnimationFrame(gameLoop);
 
 </script>
+
+<script>
+  var Scroll=new MScroll('.load-wrapper', {
+            // showScrollbar: true,
+            lazyload: true,
+            mouse: true
+        })
+</script>
+
+
 </body>
 
 </html>
