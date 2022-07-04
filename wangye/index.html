@@ -118,16 +118,16 @@
 
   </style>
   <!--引入three.js三维引擎-->
-  <script src="http://yg.bfuer.com/three.js-R125/build/three.js"></script>
+  <script src="js/three.js"></script>
   <!-- <script src="http://yg.bfuer.com/three.js-R125/build/three.module.js"></script> -->
-  <script src="http://yg.bfuer.com/three.js-R125/examples/js/controls/OrbitControls.js"></script>
+  <script src="js/OrbitControls.js"></script>
   <script src="https://cdn.bootcss.com/jquery/3.4.0/jquery.min.js"></script>
   <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.8.6/pixi.min.js"></script>
-  <script src="mscroll.js"></script>
+  <script src="js/mscroll.js"></script>
   <script src="https://cdn.staticfile.org/vue/3.2.36/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-  <script src="Tween.js"></script>
+  <script src="js/Tween.js"></script>
 </head>
 
 <body>
@@ -848,8 +848,8 @@ function onDocumentTouchDown(event) {
     function GameJoyPad(parent_container, _opts) {
         var that = this;
         this.settings = {
-            outer: "/RadialJoy_Area.png",//摇杆的背景。
-            inner: "/Button_active.png", //摇杆正体。
+            outer: "images/RadialJoy_Area.png",//摇杆的背景。
+            inner: "images/Button_active.png", //摇杆正体。
             rockerX: 120, //摇杆的x坐标 
             rockerY: 120, //摇杆的y坐标
             //--注意，所有缩放的尺寸都是按照unitiy3d获得的这些摇杆素材来设置的，假如替换了texture，请重新设置缩放尺寸。
@@ -959,7 +959,7 @@ function onDocumentTouchDown(event) {
                 return;
             }
             var newPosition = eventData.getLocalPosition(this.parent);
-            console.log(this.parent)
+            // console.log(this.parent)
             var side_x = newPosition.x - that.settings.rockerX;
             var side_y = newPosition.y - that.settings.rockerY;
 
