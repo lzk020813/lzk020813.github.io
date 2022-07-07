@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>JS对象，JSON对象，字符串的互相转换</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: auto;
+    }
+  </style>
+  <!--引入three.js三维引擎-->
+  <script src="http://yg.bfuer.com/three.js-R125/build/three.js"></script>
+  <!-- <script src="..\OrbitControls.js"></script> -->
+  <script src="http://yg.bfuer.com/three.js-R125/examples/js/controls/OrbitControls.js"></script>
+  <!-- 引入threejs扩展库STLLoader.js加载器 -->
+  <script src="http://yg.bfuer.com/three.js-R125/examples/js/loaders/OBJLoader.js"></script>
+  <!-- 引入obj模型材质加载库MTLLoader.js -->
+  <script src="http://yg.bfuer.com/three.js-R125/examples/js/loaders/MTLLoader.js"></script>
+</head>
+
+<body>
+  <script type="text/javascript">
+    //全局变量，g表示global
+    let g_scene, g_camera, g_renderer, g_controls;
+
+    //***************程序主逻辑********************
+    init();//初始化
+    loop();//循环开始
+
+
+    //循环运行update，render
+    function loop() {
+      requestAnimationFrame(loop);
+      update();
+      render();
+    }
+
+    function update() {
+        //物体随着XY轴旋转
+        //cube.rotation.x +=0.01;
+        //cube.rotation.y += 0.005;
+      }
+
+    //渲染
+    function render() {
+      g_renderer.render(g_scene, g_camera);
+    }
+    
+    //将需要初始化的放在该方法中统一初始化
+    function init() {
+      initScene();//初始化场景   
+      initCamera();//初始化相机
+      initRenender();//初始化渲染器
+      initLight();//初始化光线
+
+      setWindown();//窗体的设置
+      setEventsMouse();//定义鼠标事件
+      setKeyEvents();//定义键盘按键事件       
+      setOrbitControl();//设置Orbit控制    
+      setMesh();//定义场景中的物体
+    }
+
+    //*************************************************
+    //初始化场景
+    function initScene() {
+      g_scene = new THREE.Scene();//创建场景
+
+      //let axisHelper = new THREE.AxesHelper(250);
+     // g_scene.add(axisHelper);
+    }
+
+    //初始化相机
+    function initCamera() {
+      let k = window.innerWidth / window.innerHeight; //窗口宽高比
+      let s = 150; 
+      
+      // g_camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
+      g_camera = new THREE.PerspectiveCamera(60, k, 1, 100000);
+      g_camera.position.set(8000, 5000, 4000); //设置相机位置
+      g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
+    }
+
+    //初始化渲染器
+    function initRenender() {
+      //创建渲染器
+      g_renderer = new THREE.WebGLRenderer();
+      g_renderer.setSize(window.innerWidth, window.innerHeight);
+      g_renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
+      document.body.appendChild(g_renderer.domElement); //body元素中插入canvas对象, 渲染到浏览器
+    }
+
+    //初始化光源
+    function initLight() {
+      //点光源
+      let light_point = new THREE.PointLight(0xffffff);
+      light_point.position.set(400, 200, 300); //点光源位置
+      g_scene.add(light_point); //点光源添加到场景中
+      //环境光
+      let ambient = new THREE.AmbientLight(0x444444);
+      g_scene.add(ambient);
+      //聚光灯
+      // let light_spot = new THREE.SpotLight(0x00ffff);
+      // light_spot.position.set(-20, 80, -100); //点光源位置
+      // light_spot.angle = 0.5;
+      // g_scene.add(light_spot); //点光源添加到场景中
+
+      // let spotLightHelper = new THREE.SpotLightHelper( light_spot );
+      // g_scene.add( spotLightHelper );
+    }
+
+    //*************************************************
+    //响应resize消息，设置窗口尺寸并重设相机投影参数
+    function setWindown() {
+      //加入事件监听器,窗口自适应
+      window.addEventListener('resize', function () {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        g_renderer.setSize(width, height);
+        g_camera.aspect = width / height;
+        g_camera.updateProjectionMatrix();
+      });
+    }
+
+    //定义鼠标事件
+    function setEventsMouse() {
+      //点击了鼠标左键
+      window.addEventListener('click', function (e) {
+        if (e.button === 0) {
+          console.log("点击了鼠标左键");
+        }
+      });
+
+      //点击了鼠标右键
+      window.addEventListener('contextmenu', function (e) {
+        if (e.button === 2) {
+          console.log("点击了鼠标右键");
+        }
+      });
+
+      //鼠标移动坐标2D坐标
+      window.addEventListener('mousemove', function (e) {
+        // console.log('x:' + e.x);
+        // console.log('y:' + e.y);
+      });
+
+    }
+
+    //定义键盘按键事件
+    function setKeyEvents() {
+      window.addEventListener('keydown', function (e) {
+        console.log(e);
+      });
+    }
+
+    //定义控制
+    function setOrbitControl() {
+      //轨道控制 镜头的移动
+      g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
+    }
+
+    //定义场景中的网格物体
+    function setMesh() {
+      
+      var OBJLoader = new THREE.OBJLoader();//obj加载器
+      var MTLLoader = new THREE.MTLLoader();//材质文件加载器
+      MTLLoader.load('./Gallery.mtl', function(materials) {
+        // 返回一个包含材质的对象MaterialCreator
+        console.log(materials);
+        //obj的模型会和MaterialCreator包含的材质对应起来
+        OBJLoader.setMaterials(materials);
+        OBJLoader.load('./Gallery.obj', function(obj) {
+          console.log(obj);
+          //obj.scale.set(10, 10, 10); //放大obj组对象
+          obj.position.set(0, 0, 0);//网格模型的几何体居中
+          g_scene.add(obj);//返回的组对象插入场景中
+        })
+      })
+
+    }
+
+  </script>
+</body>
+
+</html>

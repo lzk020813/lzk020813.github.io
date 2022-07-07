@@ -18,10 +18,11 @@
     }
     .pic_show{
       position: absolute;
-      left: 22%;
+      left: 25%;
       bottom: 3%;
-      width: 60%;
+      width: 55%;
       height: 13%;
+      background: lightgray;
     }
 
     .upline{
@@ -51,8 +52,9 @@
        /* -webkit-user-select: none; */
        /* user-select: none; */
       height: 90%;
-      width: 100%;
+      width: 99%;
       top: 5%;
+      left: 0.5%;
     }
         
     .load-scroller {
@@ -76,6 +78,7 @@
         height: 100%;
         padding: 0.2rem 0.1rem;
         margin-right: 1rem;
+        /* margin-left: 0.5rem; */
         background: green;
         border-radius: 0.1rem;
         overflow: hidden;
@@ -90,19 +93,33 @@
       position: absolute;
       bottom: 3%;
       right: 6.3%;
-      width: 2%;
-      height: 4%;
+      width: 35px;
+      height: 35px;
       background-color:lightgrey;
       border-width: 10px;
       border-radius: 5px;
      }
 
-     .list_pic{
+     .list_pic_show{
       position: absolute;
       top: 0;
       width: 100%;
       height: 100%;
       /* background-color: #fff; */
+      cursor:pointer;
+      background:url(images/列表.png);
+      background-size:100% 100%;
+     }
+
+     .list_pic_hidden{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      /* background-color: #fff; */
+      cursor:pointer;
+      background:url(images/隐藏.png);
+      background-size:100% 100%;
      }
 
      .list_text{
@@ -116,6 +133,38 @@
       text-align: center;
      }
 
+     .music{
+      position: absolute;
+      bottom: 3%;
+      right: 2.3%;
+      width: 35px;
+      height: 35px;
+      background-color:lightgrey;
+      border-width: 10px;
+      border-radius: 5px;
+     }
+
+     .music_pic_show{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      /* background-color: #fff; */
+      cursor:pointer;
+      background:url(images/music.png);
+      background-size:100% 100%;
+     }
+
+     .music_pic_hidden{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      /* background-color: #fff; */
+      cursor:pointer;
+      background:url(images/静音.png);
+      background-size:100% 100%;
+     }
   </style>
   <!--引入three.js三维引擎-->
   <script src="js/three.js"></script>
@@ -128,6 +177,8 @@
   <script src="https://cdn.staticfile.org/vue/3.2.36/vue.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
   <script src="js/Tween.js"></script>
+  <script src="js/MTLLoader.js"></script>
+  <script src="js/OBJLoader.js"></script>
 </head>
 
 <body>
@@ -139,36 +190,32 @@
         <div class="load-scroller">
           <!-- 利用Vue循环v-for列出图片 -->
           <div v-for="(value,index) in ImgArray" class="load-item" v-bind:style="'margin-right:0.8rem;background:url(' + value+')' +';background-size: 100% 100%'" v-on:click="ImgClick(index)"></div>
-          <!-- <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(RadialJoy_Area.png);background-size: 100% 100%;" id="imgClick">
-          </div>
-          <div class="load-item" style="background-image: url(Button_active.png);background-size: 100% 100%;" id="imgClick">
-          </div> -->
         </div>
       </div>
       <div class="downline"></div>
     </div>
 
     <div class="list" id="list_div">
-      <div class="list_pic">
-        <img src="images/list.png" alt="" style="width:100%;height:100%;cursor:pointer;" id="list_click">
+      <div v-if="isList===0" class="list_pic_show" id="list_click">
+        <!-- <img src="images/list.png" alt="" style="width:100%;height:100%;cursor:pointer;" id="list_click"> -->
       </div>
+      <div v-else class="list_pic_hidden" id="list_click"></div>
     </div>
-    <div class="list_text">
+
+    <div class="music" id="music_div">
+      <div v-if="isMusic===1" class="music_pic_show" id="music_click">
+        <audio autoplay="autoplay" loop="loop" id="audios">
+          <source src="music.mp3" type="audio/mp3" />
+        </audio>
+      </div>
+      <div v-else class="music_pic_hidden" id="music_click"></div>
+    </div>
+    <!-- <div class="list_text">
       <p v-if="isList===1">隐藏</p>
       <p v-else>列表</p>
-    </div>
+    </div> -->
+
+
 
 
     <script>
@@ -192,7 +239,7 @@
               x2: target2.x,
               y2: target2.y,
               z2: target2.z
-            }, 1000);
+            }, 3000);
             tween.onUpdate(function () {
               g_camera.position.x = positionVar.x1;
               g_camera.position.y = positionVar.y1;
@@ -208,7 +255,8 @@
               ///开启控制器
               // g_controls.enabled = true;
             });
-            tween.easing(TWEEN.Easing.Cubic.InOut);		
+            tween.easing(TWEEN.Easing.Cubic.InOut);	
+
           }
 
 
@@ -216,8 +264,24 @@
 
       var ImgListCheckNum = new Array(30).fill(0);
       var PaintPos=new THREE.Vector3()
-      var Pos=[{x:12,y:2,z:10},{x:20,y:2,z:-20}]//画的位置
-      var lookPos=[{x:-400,y:0,z:0}]//视角的方向向量
+      var Pos=[//画的位置
+        {x:205000,y:25000,z:-10000},{x:205000,y:25000,z:-10000},{x:140000,y:25000,z:44000},
+        {x:110000,y:25000,z:57000},{x:75500,y:25000,z:66000},{x:41000,y:25000,z:74000},
+        {x:77500,y:25000,z:98000},{x:64000,y:25000,z:58000},{x:35000,y:25000,z:7000},
+        {x:28000,y:25000,z:-30000},{x:9200,y:25000,z:-66000},{x:-17000,y:25000,z:-100000},
+        {x:-30000,y:25000,z:-140000},{x:-42000,y:25000,z:-128000},{x:30000,y:25000,z:-110000},
+        {x:81000,y:25000,z:-165000},{x:73800,y:24000,z:-26170},
+        {x:100000,y:24000,z:-25000}
+      ]
+      var lookPos=[//视角的方向向量
+        {x:0,y:20000,z:80000},{x:0,y:20000,z:80000},{x:80000000,y:20000,z:180000000},
+        {x:80000000,y:20000,z:180000000},{x:80000000,y:20000,z:180000000},{x:80000000,y:20000,z:180000000},
+        {x:0,y:20000,z:130000},{x:0,y:20000,z:85000},{x:0,y:24000,z:24000},
+        {x:0,y:24000,z:-18000},{x:0,y:24000,z:-62000},{x:-280000,y:24000,z:0},
+        {x:-365000,y:24000,z:0},{x:-80000000,y:24000,z:-180000000},{x:-220000,y:24000,z:0},
+        {x:-300000,y:24000,z:0},{x:-70000000,y:24000,z:-180000000},
+        {x:80000000,y:24000,z:180000000}
+      ]
       setInterval(function(){
         for(var i=0;i<ImgListCheckNum.length;i++)
         {
@@ -230,8 +294,13 @@
           el:".pic_show",//挂载目标
           data:{
               isList:1,
-              ImgArray:['images/1.bmp','images/1.bmp','images/RadialJoy_Area.png','images/Button_active.png','images/RadialJoy_Area.png','images/Button_active.png',
-              'images/RadialJoy_Area.png','images/Button_active.png','images/RadialJoy_Area.png','images/Button_active.png']
+              ImgArray:[
+              '美术展Model/p7.jpeg','美术展Model/p10.jpg','美术展Model/p11.jpg','美术展Model/p12.jpg',
+              '美术展Model/p13.png','美术展Model/p5.jpeg','美术展Model/p14.jpg','美术展Model/p8.jpeg',
+              '美术展Model/p2.jpeg','美术展Model/p1.jpeg',"美术展Model/p3.jpeg","美术展Model/xin4.jpeg",
+              "美术展Model/xin1.jpeg","美术展Model/p4.jpeg","美术展Model/p15.jpg","美术展Model/p16.jpg",
+              "美术展Model/p9.jpeg","美术展Model/cheems.jpg"
+            ]
           },
 
           methods: {
@@ -244,7 +313,20 @@
                   let t1 = new THREE.Vector3();
                   p1 = g_camera.position;
                   t1 = g_controls.target;
+                  console.log(g_controls.target)
                   animateCamera(p1, t1, Pos[index], lookPos[index]);
+                  g_controls.target.x=lookPos[index].x;
+                  g_controls.target.y=lookPos[index].y;
+                  g_controls.target.z=lookPos[index].z;
+
+                  setTimeout(function(){
+                    if(index==13||index==16)
+                      cube.rotateY(Math.PI*3/2-0.5)
+                    else if(index==2||index==3||index==4||index==5||index==17)
+                      cube.rotateY(Math.PI/2-0.5)
+                    else
+                    cube.rotateY(-0.5)   
+                  },1000)
               }
             }
           }
@@ -255,17 +337,25 @@
 
 
 
-      var vm_listText = new Vue({
-          el:".list_text",//挂载目标
+      var vm_list_pic = new Vue({
+          el:".list",//挂载目标
           data:{
               isList:1
           }
       })
 
+      var vm_music_pic = new Vue({
+          el:".music",//挂载目标
+          data:{
+              isMusic:1
+          }
+      })
+
+
       var showList = () => {
         var temp=1-vm_list._data.isList;
         Vue.set(vm_list._data,'isList',temp)
-        Vue.set(vm_listText._data,'isList',temp)
+        Vue.set(vm_list_pic._data,'isList',temp)
         if(temp==1)
         {
           setTimeout(function(){
@@ -277,8 +367,23 @@
           },100)
         }
 			}
-	  document.getElementById('list_click').addEventListener('click', showList);
 
+      var showMusic = () => {
+        var temp=1-vm_music_pic._data.isMusic;
+        Vue.set(vm_music_pic._data,'isMusic',temp)
+        if(temp==1)//播放
+        {
+          var music = document.getElementById("audios");//获取ID  
+        }
+        else{//暂停
+          var music = document.getElementById("audios");//获取ID  
+          console.log(music)
+          music.paused=true;
+        }
+      }
+
+	  document.getElementById('list_click').addEventListener('click', showList);
+    document.getElementById('music_click').addEventListener('click', showMusic);
     </script>
 
 
@@ -286,7 +391,7 @@
   <script type="text/javascript">
     //全局变量，g表示global
     let g_scene, g_camera, g_renderer, g_controls;
-    var characterSize = 1;
+    var characterSize = 10000;
  
     var checkArea=0;//判断鼠标是否在操作杆上，0为不在，1为在
     var joy=new THREE.Vector2()
@@ -300,7 +405,7 @@
     // Store movements.
     var movements = [];
     var movements2=[];
-    var playerSpeed = 0.1;
+    var playerSpeed = 500;
 
     var cube;//参考物
     var diff_x=0,diff_z=0;//摄像机位移
@@ -340,7 +445,7 @@
       // // 小窗口的显示范围
       // let mapHeight = 1000
       // let mapWidth = 2000
-      g_renderer.clear();
+      // g_renderer.clear();
 
       // g_renderer.setViewport( 0, 0, w, h );
       g_renderer.render(g_scene, g_camera);
@@ -355,18 +460,20 @@
         if (g_scene.getObjectByName('indicator_top') === undefined) {
           drawIndicator();
         } else {
-          if (indicatorTop.position.y > 0.1) {
-            indicatorTop.position.y -= 0.01;
+          if (indicatorTop.position.y > 1800) {
+            indicatorTop.position.y -= 15;
           } else {
-            indicatorTop.position.y = 0.5;
+            indicatorTop.position.y = 3500;
           }
         }
         move(g_camera, movements[0]);
-        move2(cube,movements2[0]);
+        move2(cube, movements2[0]);
+        // console.log(222)
       }
 
-        updateCamera(0.0005*diff_x,0.0005*diff_z)
-        // console.log(g_controls.target.x,g_controls.target.y,g_controls.target.z)
+        updateCamera(diff_x,diff_z)
+        // console.log(g_camera.rotation._y,cube.rotation._y)
+
     }
     
     //将需要初始化的放在该方法中统一初始化
@@ -382,10 +489,10 @@
       setOrbitControl();//设置Orbit控制    
       setMesh();//定义场景中的物体
       createFloor();
-      createTree(3, 3); 
-      createTree(8, -3);
-      createTree(-3, 8);
-      createTree(-8, -8);
+      // createTree(3, 3); 
+      // createTree(8, -3);
+      // createTree(-3, 8);
+      // createTree(-8, -8);
 
     }
 
@@ -404,10 +511,13 @@
       let s = 200; 
       
     //  g_camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
-      g_camera = new THREE.PerspectiveCamera(60, k, 0.1, 200);
-      g_camera.position.set(0, 2, 10); //设置相机位置
-    //   g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
+      g_camera = new THREE.PerspectiveCamera(60, k, 100, 10000000);
+      // g_camera.position.set(0, 2, 10); //设置相机位置
+      g_camera.position.set(140000, 25000, -60000); //设置相机位置
+      // g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
+      // g_camera.lookAt(10000,100000,100000)
       g_scene.add(g_camera);
+      console.log(g_camera)
 
       // camera2=new THREE.OrthographicCamera(window.innerWidth / -2,       // Left
       // window.innerWidth / 2,        // Right
@@ -424,7 +534,7 @@
     //初始化渲染器
     function initRenender() {
       //创建渲染器
-      g_renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+      g_renderer = new THREE.WebGLRenderer({antialias: true});
       g_renderer.setSize(window.innerWidth, window.innerHeight);
      g_renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
   //    g_renderer.setClearColor(0x000000, 1); //设置背景颜色
@@ -435,19 +545,58 @@
     //初始化光源
     function initLight() {
       //点光源
-      let light_point = new THREE.PointLight(0xffffff);
-      light_point.position.set(400, 200, 300); //点光源位置
+      let light_point = new THREE.PointLight(0xffffff,1.8);
+      light_point.position.set(174000, 30000, -7500); //点光源位置
       g_scene.add(light_point); //点光源添加到场景中
+      light_point.distance = 200000
       //环境光
       let ambient = new THREE.AmbientLight(0x444444);
-      g_scene.add(ambient);
+      // g_scene.add(ambient);
+
+      let light_point2 = new THREE.PointLight(0xffffff,1.5);
+      light_point2.position.set(95000, 20000, 65000); //点光源位置
+      g_scene.add(light_point2); //点光源添加到场景中
+      light_point2.distance = 250000
+
+      let light_point3 = new THREE.PointLight(0xffffff,1.5);
+      light_point3.position.set(14700, 20000, -53500); //点光源位置
+      g_scene.add(light_point3); //点光源添加到场景中
+      light_point3.distance = 200000
+
+      let light_point4 = new THREE.PointLight(0xffffff,1.5);
+      light_point4.position.set(-26000, 20000, -136000); //点光源位置
+      g_scene.add(light_point4); //点光源添加到场景中
+      light_point4.distance = 150000
+
+      let light_point5 = new THREE.PointLight(0xffffff,1.5);
+      light_point5.position.set(11400, 20000, -105000); //点光源位置
+      g_scene.add(light_point5); //点光源添加到场景中
+      light_point5.distance = 100000
+
+      let light_point6 = new THREE.PointLight(0xffffff,1);
+      light_point6.position.set(76000, 20000, -165000); //点光源位置
+      g_scene.add(light_point6); //点光源添加到场景中
+      light_point6.distance = 100000
+
+      let light_point7 = new THREE.PointLight(0xffffff,1);
+      light_point7.position.set(87000, 20000, -25700); //点光源位置
+      g_scene.add(light_point7); //点光源添加到场景中
+      light_point7.distance = 200000
+
+
+      let light_point8 = new THREE.PointLight(0xffffff,1);
+      light_point8.position.set(120000, 20000, -207000); //点光源位置
+      g_scene.add(light_point8); //点光源添加到场景中
+      light_point8.distance = 200000
       //聚光灯
-      // let light_spot = new THREE.SpotLight(0x00ffff);
-      // light_spot.position.set(-20, 80, -100); //点光源位置
-      // light_spot.angle = 0.5;
+      let light_spot = new THREE.SpotLight(0xffffff);
+      light_spot.position.set(87000, 20000, -25700); //点光源位置
+      light_spot.angle = 5;
+      // console.log(light_spot)
+      // light_spot.target.set(0, 1, 1); //修改照射方向
       // g_scene.add(light_spot); //点光源添加到场景中
 
-      // let spotLightHelper = new THREE.SpotLightHelper( light_spot );
+      let spotLightHelper = new THREE.SpotLightHelper( light_spot );
       // g_scene.add( spotLightHelper );
     }
 
@@ -486,32 +635,49 @@
     function setOrbitControl() {
       //轨道控制 镜头的移动
       g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
+      // g_controls.target=new THREE.Vector3(1, 1, -1)
+      console.log(g_controls.target)
       g_controls.enabled=false
-      g_controls.enabledRotate=false
-      g_controls.enableZoom=false
+
+      g_controls.enableRotate=false
+      // g_controls.enableZoom=false
+      // g_controls.enablePan = true;
+      // g_controls.screenSpacePanning = false; // 移动相机位置焦点默认是修改x轴和z轴方向，如果将此值修改为true，焦点位置将修改x轴和y轴方向
     }
 
 
     //定义场景中的网格物体
     function setMesh() {
-      var geometry_cube = new THREE.BoxBufferGeometry(1,1,1);
+      var geometry_cube = new THREE.BoxBufferGeometry(10000,10000,10000);
       var material_cube = new THREE.MeshLambertMaterial({
-        color: 0x00ffff
+        color: 0x00ff00
       }); //材质对象Material
       cube = new THREE.Mesh(geometry_cube, material_cube);
-      cube.position.set(0,2,10)
+      cube.position.set(140000, 25000, -60000)
       // cube.rotation.x = -1 * Math.PI / 2;
+      cube.rotation.y=g_camera.rotation.y;
       g_scene.add(cube); //网格模型添加到场景中
       console.log(cube)
-      // objects.push(cube)
-      var geometry_cube2 = new THREE.BoxBufferGeometry(1,1,1);
-      var material_cube2 = new THREE.MeshLambertMaterial({
-        color: 0x00ffff
-      }); //材质对象Material
-      cube2 = new THREE.Mesh(geometry_cube2, material_cube2);
-      cube2.position.set(10,2,10)
-      // cube.rotation.x = -1 * Math.PI / 2;
-      g_scene.add(cube2); //网格模型添加到场景中
+
+
+      var OBJLoader = new THREE.OBJLoader();//obj加载器
+      var MTLLoader = new THREE.MTLLoader();//材质文件加载器
+      MTLLoader.load('美术展Model/Gallery.mtl', function(materials) {
+        // 返回一个包含材质的对象MaterialCreator
+        console.log(materials);
+        //obj的模型会和MaterialCreator包含的材质对应起来
+        OBJLoader.setMaterials(materials);
+        OBJLoader.load('美术展Model/Gallery.obj', function(obj) {
+          console.log(obj);
+          obj.scale.set(15, 15, 15); //放大obj组对象
+          obj.position.set(320000, 0, 100000);//网格模型的几何体居中
+          obj.rotateY(Math.PI*0.63)
+          g_scene.add(obj);//返回的组对象插入场景中
+          objects.push(obj)
+      console.log(objects)
+        })
+      })
+
     }
 
 
@@ -564,19 +730,42 @@ function onDocumentTouchDown(event) {
       const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
  
       _euler.setFromQuaternion(g_camera.quaternion);//四元数转化为欧拉对象
+      _euler2.setFromQuaternion(cube.quaternion);
  
       _euler.y += movementX * 0.002 * pointerSpeed;
       _euler.x += movementY * 0.002 * pointerSpeed;
       // console.log(_euler._x,_euler._y,_euler._z)
-      g_controls.target.x=_euler._x,
-      g_controls.target.y=_euler._y,
-      g_controls.target.z=_euler._z,
       _euler.x = Math.max(_PI_2 - maxPolarAngle, Math.min(_PI_2 - minPolarAngle, _euler.x));
- 
+
+      // g_controls.target.x=_euler._x,
+      // g_controls.target.y=_euler._y,
+      // g_controls.target.z=_euler._z,
       g_camera.quaternion.setFromEuler(_euler);
 
       _euler2.y += movementX * 0.002 * pointerSpeed;
       cube.quaternion.setFromEuler(_euler2);
+
+
+      var mX = (event.clientX / g_renderer.domElement.clientWidth) * 2 - 1;
+      var mY = - (event.clientY / g_renderer.domElement.clientHeight) * 2 + 1;
+
+      var vector = new THREE.Vector3(0, 0, 50 );
+      //将鼠标坐标转换为3D空间坐标
+      vector.unproject(g_camera);
+
+      //获得从相机指向鼠标所对应的3D空间点的射线（归一化）
+      vector.sub( g_camera.position ).normalize();
+      // mouse.x=0;
+      // mouse.y=0;
+      // raycaster.setFromCamera(mouse, g_camera);
+      // console.log(raycaster)
+
+      g_controls.target.x = vector.x ;
+      g_controls.target.y = vector.y ;
+      g_controls.target.z = vector.z ;
+      // console.log(g_controls.target)
+
+      // console.log(g_controls.target)
     }
     //#endregion
  
@@ -622,7 +811,7 @@ function onDocumentTouchDown(event) {
         // Grab the coordinates.
         mouse.x = (event.clientX / g_renderer.domElement.clientWidth) * 2 - 1;
         mouse.y = - (event.clientY / g_renderer.domElement.clientHeight) * 2 + 1;
- 
+
         // Use the raycaster to detect intersections.
         raycaster.setFromCamera(mouse, g_camera);
         // 用一个新的原点和方向向量来更新射线（ray），用照相机的原点和点击的点构成一条直线。
@@ -630,9 +819,11 @@ function onDocumentTouchDown(event) {
         // Grab all objects that can be intersected.
         var intersects = raycaster.intersectObjects(objects,true);
 
+        console.log(intersects)
         if (intersects.length > 0) {
           movements.push(intersects[0].point);
           movements2.push(intersects[0].point)
+          console.log(movements[0])
         }
       }
     }
@@ -645,7 +836,7 @@ function onDocumentTouchDown(event) {
       var posZ = location.position.z;
       var newPosX = destination.x;
       var newPosZ = destination.z;
- 
+      
       // 设置一个乘数，以防我们需要负值。
       var multiplierX = 1;
       var multiplierZ = 1;
@@ -750,11 +941,13 @@ function onDocumentTouchDown(event) {
     //#region 创建参照物
     // 创建地面.
     function createFloor() {
-      var geometry = new THREE.PlaneBufferGeometry(100, 100);
+      var geometry = new THREE.PlaneBufferGeometry(500000, 200000);
       var material = new THREE.MeshToonMaterial({ color: 0x6e6e6e });
       var plane = new THREE.Mesh(geometry, material);
-      plane.rotation.x = -1 * Math.PI / 2;
-      plane.position.y = 0;
+      // plane.rotation.y = -1 * Math.PI / 2;
+      plane.rotateY(-Math.PI*0.37)
+      // plane.position.y = 0;
+      plane.position.set(175000, 100, -100000);
       g_scene.add(plane);
       objects.push(plane);
     }
@@ -798,10 +991,10 @@ function onDocumentTouchDown(event) {
       var geometry = new THREE.TetrahedronGeometry(topSize, 0);
       var material = new THREE.MeshToonMaterial({ color: 0x00ccff, emissive: 0x00ccff });
       indicatorTop = new THREE.Mesh(geometry, material);
-      indicatorTop.position.y = 0.05; // Flat surface so hardcode Y position for now.
+      indicatorTop.position.y = 3500; // Flat surface so hardcode Y position for now.
       indicatorTop.position.x = movements[0].x; // Get the X destination.
       indicatorTop.position.z = movements[0].z; // Get the Z destination.
-      indicatorTop.rotation.x = -0.97;
+      indicatorTop.rotation.x = 0.97;
       indicatorTop.rotation.y = Math.PI / 4;
       indicatorTop.name = 'indicator_top'
       g_scene.add(indicatorTop);
@@ -811,7 +1004,7 @@ function onDocumentTouchDown(event) {
       geometry.dynamic = true;
       var material = new THREE.MeshToonMaterial({ color: 0x00ccff, emissive: 0x00ccff });
       indicatorBottom = new THREE.Mesh(geometry, material);
-      indicatorBottom.position.y = 0.025;
+      indicatorBottom.position.y = 1000;
       indicatorBottom.position.x = movements[0].x;
       indicatorBottom.position.z = movements[0].z;
       indicatorBottom.rotation.x = -Math.PI / 2;
@@ -821,9 +1014,9 @@ function onDocumentTouchDown(event) {
 
     function updateCamera(diffX,diffZ){
         // console.log(g_camera.position)
-        cube.translateX(diffX);
+        cube.translateZ(-diffX);
         g_camera.position.x=cube.position.x;
-        cube.translateZ(diffZ);
+        cube.translateX(diffZ);
         g_camera.position.z=cube.position.z;
     }
   </script>
@@ -926,7 +1119,7 @@ function onDocumentTouchDown(event) {
         var dragging = false;
         var eventData = {};
         var touch_event_id = 0;
-        /******pixi bug1：当两个手指其中一个，譬如摇杆，另一个手指点击按钮，摇杆会接收到touch end事件。醉了。******/
+
         function onDragStart(event) {
             checkArea=1;
             //--注意，pc端的identifier是undefined。
@@ -1142,11 +1335,18 @@ function onDocumentTouchDown(event) {
 </script>
 
 <script>
-  var Scroll=new MScroll('.load-wrapper', {
-            // showScrollbar: true,
-            lazyload: true,
-            mouse: true
-        })
+  // var Scroll=new MScroll('.load-wrapper', {
+  //           // showScrollbar: true,
+  //           lazyload: true,
+  //           mouse: true
+  //       })
+  setTimeout(function(){
+            new MScroll('.load-wrapper', {
+              // showScrollbar: true,
+              lazyload: true,
+              mouse: true
+          })
+          },100)
 </script>
 
 
