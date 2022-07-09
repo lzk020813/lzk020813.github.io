@@ -196,14 +196,14 @@
     </div>
 
     <div class="list" id="list_div">
-      <div v-if="isList===0" class="list_pic_show" id="list_click">
+      <div v-if="isList===1" class="list_pic_show" id="list_click">
         <!-- <img src="images/list.png" alt="" style="width:100%;height:100%;cursor:pointer;" id="list_click"> -->
       </div>
       <div v-else class="list_pic_hidden" id="list_click"></div>
     </div>
 
     <div class="music" id="music_div">
-      <div v-if="isMusic===1" class="music_pic_show" id="music_click">
+      <div v-if="isMusic===0" class="music_pic_show" id="music_click">
         <audio autoplay="autoplay" loop="loop" id="audios">
           <source src="music.mp3" type="audio/mp3" />
         </audio>
@@ -245,6 +245,7 @@
               g_camera.position.y = positionVar.y1;
               g_camera.position.z = positionVar.z1;
               cube.position.set(positionVar.x1, positionVar.y1, positionVar.z1)
+              // cube.rotation.y=g_camera.rotation.y
               g_controls.target.x = positionVar.x2;
               g_controls.target.y = positionVar.y2;
               g_controls.target.z = positionVar.z2;
@@ -289,6 +290,8 @@
         }
       },3000)
 
+      var lastIndex=-2;
+
       Vue.config.productionTip=false;
       var vm_list = new Vue({
           el:".pic_show",//挂载目标
@@ -308,25 +311,66 @@
               ImgListCheckNum[index]++;
               if(ImgListCheckNum[index]==2)
               {
+                console.log(lastIndex)
                 //相机动画
                   let p1 = new THREE.Vector3();
                   let t1 = new THREE.Vector3();
                   p1 = g_camera.position;
                   t1 = g_controls.target;
-                  console.log(g_controls.target)
                   animateCamera(p1, t1, Pos[index], lookPos[index]);
                   g_controls.target.x=lookPos[index].x;
                   g_controls.target.y=lookPos[index].y;
                   g_controls.target.z=lookPos[index].z;
 
                   setTimeout(function(){
+                    // cube.rotation.y=g_camera.rotation.y
+                    // console.log( cube.rotation.y,g_camera.rotation.y)
+
+                    // _euler.setFromQuaternion(g_camera.quaternion);//四元数转化为欧拉对象
+                    // _euler2.setFromQuaternion(cube.quaternion);
+                    // console.log(_euler._y,_euler2._y)
+                    // // _euler2._y=_euler.y;
+                    // cube.quaternion.setFromEuler(_euler2);
+
                     if(index==13||index==16)
-                      cube.rotateY(Math.PI*3/2-0.5)
+                    {
+                      // if(lastIndex==-1)
+                      //   cube.rotateY(Math.PI*3/2)
+                      // else if(lastIndex==2||lastIndex==3||lastIndex==4||lastIndex==5||lastIndex==17)
+                      //   cube.rotateY(Math.PI/2+0.7)
+                      // else if(lastIndex==13||lastIndex==16)
+                      //   cube.rotateY(Math.PI+0.2)
+                      // else
+                      //   cube.rotateY(Math.PI*3/2)
+
+                      // cube.rotation.y=-1.15
+                      cube.rotation.y=0.5+Math.PI*3/2;
+                    }
                     else if(index==2||index==3||index==4||index==5||index==17)
-                      cube.rotateY(Math.PI/2-0.5)
+                    {
+                      // if(lastIndex==-1)
+                      //   cube.rotateY(Math.PI-0.5)
+                      // else if(lastIndex==2||lastIndex==3||lastIndex==4||lastIndex==5||lastIndex==17)
+                      //   cube.rotateY(-Math.PI/2)
+                      // else if(lastIndex==13||lastIndex==16)
+                      //   cube.rotateY(-Math.PI/2)
+                      // else
+                      //   cube.rotateY(Math.PI-0.5)
+
+                      // cube.rotation.y=1.8
+                      cube.rotation.y=0.5+Math.PI/2
+                    }
                     else
-                    cube.rotateY(-0.5)   
-                  },1000)
+                    {
+                      cube.rotation.y=0.5
+                    }
+                      // if(lastIndex==-1)
+                      //   cube.rotation.y=1.8-Math.PI/2
+                      // else
+                      //   cube.rotation.y=0.6
+                    lastIndex=index
+                    console.log(g_camera.rotation.y-cube.rotation.y)
+                  },1500)
               }
             }
           }
@@ -472,7 +516,6 @@
       }
 
         updateCamera(diff_x,diff_z)
-        // console.log(g_camera.rotation._y,cube.rotation._y)
 
     }
     
@@ -513,6 +556,7 @@
     //  g_camera = new THREE.OrthographicCamera(-s * k, s * k, s, -s, 1, 1000);
       g_camera = new THREE.PerspectiveCamera(60, k, 100, 10000000);
       // g_camera.position.set(0, 2, 10); //设置相机位置
+      g_camera.rotation.y=0
       g_camera.position.set(140000, 25000, -60000); //设置相机位置
       // g_camera.lookAt(g_scene.position); //设置相机方向(指向的场景对象)
       // g_camera.lookAt(10000,100000,100000)
@@ -588,9 +632,14 @@
       light_point8.position.set(120000, 20000, -207000); //点光源位置
       g_scene.add(light_point8); //点光源添加到场景中
       light_point8.distance = 200000
+
+      let light_point9 = new THREE.PointLight(0xffffff,0.5);
+      light_point9.position.set(55000, 30000, -28000); //点光源位置
+      g_scene.add(light_point9); //点光源添加到场景中
+      light_point9.distance = 200000
       //聚光灯
       let light_spot = new THREE.SpotLight(0xffffff);
-      light_spot.position.set(87000, 20000, -25700); //点光源位置
+      light_spot.position.set(55000, 30000, -28000); //点光源位置
       light_spot.angle = 5;
       // console.log(light_spot)
       // light_spot.target.set(0, 1, 1); //修改照射方向
@@ -636,7 +685,7 @@
       //轨道控制 镜头的移动
       g_controls = new THREE.OrbitControls(g_camera, g_renderer.domElement);
       // g_controls.target=new THREE.Vector3(1, 1, -1)
-      console.log(g_controls.target)
+      console.log(g_controls)
       g_controls.enabled=false
 
       g_controls.enableRotate=false
@@ -654,8 +703,12 @@
       }); //材质对象Material
       cube = new THREE.Mesh(geometry_cube, material_cube);
       cube.position.set(140000, 25000, -60000)
+      // cube.position.set(87000, 20000, -25700)
       // cube.rotation.x = -1 * Math.PI / 2;
-      cube.rotation.y=g_camera.rotation.y;
+      // cube.rotation.y=g_camera.rotation.y;
+      // cube.quaternion.y=g_camera.quaternion.y
+      cube.rotation.y=0.5
+      console.log(cube.rotation.y)
       g_scene.add(cube); //网格模型添加到场景中
       console.log(cube)
 
@@ -763,9 +816,9 @@ function onDocumentTouchDown(event) {
       g_controls.target.x = vector.x ;
       g_controls.target.y = vector.y ;
       g_controls.target.z = vector.z ;
-      // console.log(g_controls.target)
-
-      // console.log(g_controls.target)
+      
+    
+      // console.log(g_camera.rotation.y-cube.rotation.y)
     }
     //#endregion
  
@@ -808,6 +861,7 @@ function onDocumentTouchDown(event) {
       if (((event.which == 1 || ismobile) && clickPointX == event.clientX && clickPointY == event.clientY)) {
         stopMovement();
         stopMovement2();
+        lastIndex=-1;
         // Grab the coordinates.
         mouse.x = (event.clientX / g_renderer.domElement.clientWidth) * 2 - 1;
         mouse.y = - (event.clientY / g_renderer.domElement.clientHeight) * 2 + 1;
